@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 )
@@ -16,7 +17,7 @@ func (fooReader *FooReader) Read(b []byte) (int, error) {
 type FooWriter struct{}
 
 func (fooWriter *FooWriter) Write(b []byte) (int, error) {
-	fmt.Print("out >")
+	fmt.Print("out > ")
 	return os.Stdout.Write(b)
 }
 
@@ -26,17 +27,7 @@ func main() {
 		writer FooWriter
 	)
 
-	input := make([]byte, 4096)
-
-	s, err := reader.Read(input)
-	if err != nil {
-		log.Fatalln("Unable to read data")
+	if _, err := io.Copy(&writer, &reader); err != nil {
+		log.Fatalln("Unable to read/write data")
 	}
-	fmt.Printf("Read %d bytes from stdin\n", s)
-
-	s, err = writer.Write(input)
-	if err != nil {
-		log.Fatalln("Unable to read data")
-	}
-	fmt.Printf("Write %d bytes to stdout\n", s)
 }

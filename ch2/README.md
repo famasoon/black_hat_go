@@ -221,3 +221,147 @@ func main() {
 }
 
 ```
+
+`io`パッケージにはCopyというデータをリーダからライターへ渡す関数がある。
+なのでそれを使ってみたのがこちら.
+
+```go
+package main
+
+import (
+	"fmt"
+	"io"
+	"log"
+	"os"
+)
+
+type FooReader struct{}
+
+func (fooReader *FooReader) Read(b []byte) (int, error) {
+	fmt.Print("in > ")
+	return os.Stdin.Read(b)
+}
+
+type FooWriter struct{}
+
+func (fooWriter *FooWriter) Write(b []byte) (int, error) {
+	fmt.Print("out > ")
+	return os.Stdout.Write(b)
+}
+
+func main() {
+	var (
+		reader FooReader
+		writer FooWriter
+	)
+
+	if _, err := io.Copy(&writer, &reader); err != nil {
+		log.Fatalln("Unable to read/write data")
+	}
+}
+
+```
+
+とりあえず`echo server`をたててみる
+
+```go
+package main
+
+import (
+	"io"
+	"log"
+	"net"
+)
+
+func echo(conn net.Conn) {
+	defer conn.Close()
+	b := make([]byte, 32)
+	for {
+		size, err := conn.Read(b[0:])
+		if err == io.EOF {
+			log.Println("Client disconnected")
+			break
+		}
+
+		if err != nil {
+			log.Println("Unexpected err")
+			break
+		}
+
+		log.Printf("Received  %d bytes: %s\n", size, string(b))
+
+		log.Println("Writing data")
+		if _, err := conn.Write(b[0:size]); err != nil {
+			log.Fatalln("Unable to write data")
+		}
+	}
+}
+
+func main() {
+	listener, err := net.Listen("tcp", ":20000")
+	if err != nil {
+		log.Fatalln("Unable to bind to port")
+	}
+
+	log.Println("Listening on 0.0.0.0:20000")
+	for {
+		conn, err := listener.Accept()
+		log.Println("Received connection")
+		if err != nil {
+			log.Fatalln("Unable to access connection")
+		}
+
+		go echo(conn)
+	}
+}
+```
+
+---
+
+こんな書き方もある
+
+```go
+ackage main
+
+import (
+	"bufio"
+	"log"
+	"net"
+)
+
+func echo(conn net.Conn) {
+	defer conn.Close()
+	rendder := bufio.NewReader(conn)
+	s, err := rendder.ReadString('\n')
+	if err != nil {
+		log.Fatalln("Unable to read data")
+	}
+	log.Printf("Read %d bytes: %s", len(s), s)
+	log.Println("Writing data")
+
+	writer := bufio.NewWriter(conn)
+	if _, err := writer.WriteString(s); err != nil {
+		log.Fatalln("Unable to write data")
+	}
+	writer.Flush()
+}
+
+func main() {
+	listener, err := net.Listen("tcp", ":20000")
+	if err != nil {
+		log.Fatalln("Unable to bind to port")
+	}
+
+	log.Println("Listening on 0.0.0.0:20000")
+	for {
+		conn, err := listener.Accept()
+		log.Println("Received connection")
+		if err != nil {
+			log.Fatalln("Unable to access connection")
+		}
+
+		go echo(conn)
+	}
+}
+
+```
