@@ -172,3 +172,52 @@ func main() {
 }
 
 ```
+
+## プロキシを作る
+まずは入出力をGo言語で操作するために、標準入力から受け取った文字列を標準出力に出すコードを書く.
+
+```go
+package main
+
+import (
+	"fmt"
+	"log"
+	"os"
+)
+
+type FooReader struct{}
+
+func (fooReader *FooReader) Read(b []byte) (int, error) {
+	fmt.Print("in > ")
+	return os.Stdin.Read(b)
+}
+
+type FooWriter struct{}
+
+func (fooWriter *FooWriter) Write(b []byte) (int, error) {
+	fmt.Print("out >")
+	return os.Stdout.Write(b)
+}
+
+func main() {
+	var (
+		reader FooReader
+		writer FooWriter
+	)
+
+	input := make([]byte, 4096)
+
+	s, err := reader.Read(input)
+	if err != nil {
+		log.Fatalln("Unable to read data")
+	}
+	fmt.Printf("Read %d bytes from stdin\n", s)
+
+	s, err = writer.Write(input)
+	if err != nil {
+		log.Fatalln("Unable to read data")
+	}
+	fmt.Printf("Write %d bytes to stdout\n", s)
+}
+
+```
