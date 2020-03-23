@@ -1,33 +1,40 @@
 package main
 
 import (
-	"fmt"
 	"io"
 	"log"
-	"os"
+	"net"
 )
 
-type FooReader struct{}
+func handle(src net.Conn) {
+	dst, err := net.Dial("tcp", "yahoo.com:80")
+	if err != nil {
+		log.Fatalln("Unable to connect to our unreacheble host")
+	}
+	defer dst.Close()
 
-func (fooReader *FooReader) Read(b []byte) (int, error) {
-	fmt.Print("in > ")
-	return os.Stdin.Read(b)
-}
+	go func() {
+		if _, err := io.Copy(dst, src); err != nil {
+			log.Fatalln(err)
+		}
+	}()
 
-type FooWriter struct{}
-
-func (fooWriter *FooWriter) Write(b []byte) (int, error) {
-	fmt.Print("out > ")
-	return os.Stdout.Write(b)
+	if _, err := io.Copy(src, dst); err != nil {
+		log.Fatalln(err)
+	}
 }
 
 func main() {
-	var (
-		reader FooReader
-		writer FooWriter
-	)
+	listener, err := net.Listen("tcp", ":80")
+	if err != nil {
+		log.Fatalln("Unable to accept connection")
+	}
 
-	if _, err := io.Copy(&writer, &reader); err != nil {
-		log.Fatalln("Unable to read/write data")
+	for {
+		conn, err := listener.Accept()
+		if err != nil {
+			log.Fatalln(err)
+		}
+		go handle(conn)
 	}
 }
