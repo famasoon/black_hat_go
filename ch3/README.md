@@ -36,3 +36,21 @@ shodanのツールを作る
 作った
 shodanディレクトリを参照
 (fishだとうまく動かないからbashでやること)
+`shodan`ディレクトリに収まっている。
+
+---
+
+## Interacting with Metasploit
+Metasploit は攻撃によく使われるフレームワーク。
+この項目では`metasploit`についてみっちりやっていく。
+
+Kaliの入っているLinuxマシンを使う必要があるので一旦ペンディング
+* [ ] Kali linuxを立ち上げてこのトレーニングを実施する
+
+## Parsing Document Metadata with Bing Scraping
+Bing のスクレイピング結果からメタデータを抽出してみる。
+
+https://github.com/famasoon/parseBING
+
+に結果書いたから確認。
+
