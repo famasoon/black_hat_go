@@ -105,3 +105,41 @@ Content-Length: 15
 
 404 Not Found
 ```
+
+## simple middleware
+既存の構造体に`ServeHTTP`関数を追加することで`http.Handle`に登録できる。
+これを利用して接続があるたびに標準出力に
+`log.Println("star")`
+`log.Println("finish")`
+を実行させて文字列を吐き出させる。
+
+```go
+package main
+
+import (
+	"fmt"
+	"log"
+	"net/http"
+)
+
+type logger struct {
+	Inner http.Handler
+}
+
+func (l *logger) (w http.ResponseWriter, r *http.Request) {
+	log.Println("star")
+	l.Inner.ServeHTTP(w, r)
+	log.Println("finish")
+}
+
+func hello(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintln(w, "Hello")
+}
+
+func main() {
+	f := http.HandlerFunc(hello)
+	l := logger{Inner: f}
+	http.ListenAndServe(":8080", &l)
+}
+
+```
