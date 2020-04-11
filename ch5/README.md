@@ -66,3 +66,11 @@ func main() {
 	}
 }
 ```
+
+## サブドメインを列挙してみる
+
+```sh
+$ ./enumerating_subdomains  -domain microsoft.com -wordlist namelist.txt -c 1000
+```
+でできる。
+goroutineで非同期処理するのではやい
